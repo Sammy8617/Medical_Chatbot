@@ -1,0 +1,9 @@
+# Copy this file to .env and fill in your values
+# Hugging Face API Token (optional for deployment)
+HF_TOKEN=your_huggingface_token_here
+
+# Deployment Mode (local, hosted, or hybrid)
+DEPLOYMENT_MODE=hybrid
+
+# Vector Database Path
+DB_FAISS_PATH=vectorstore/db_faiss
