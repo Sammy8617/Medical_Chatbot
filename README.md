@@ -54,7 +54,7 @@ Medical AI Assistant is an interactive, AI-powered chatbot designed to answer me
     - Place medical PDF files in the `Data/` directory.
 5. **Run the application**
     ```bash
-    streamlit run chatbot.py
+    streamlit run frontend.py
     ```
 
 ---
