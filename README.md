@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" height="64" />
   <h1>Medical AI Assistant</h1>
   <p><b>Project Documentation</b></p>
 </div>
