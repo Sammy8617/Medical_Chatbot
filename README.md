@@ -193,7 +193,4 @@ The system architecture consists of the following key components:
 
 ***
 
-This documentation provides a clear, structured overview of the Medical AI Assistant project's setup, components, and workflow to facilitate understanding, usage, and future enhancements.
-<span style="display:none">[^1][^10][^2][^3][^4][^5][^6][^7][^8][^9]</span>
 
-<div style="text-align: center">⁂</div>
