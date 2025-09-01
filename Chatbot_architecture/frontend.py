@@ -97,7 +97,6 @@ def load_vector_database():
     try:
         if not os.path.exists(DB_FAISS_PATH):
             st.error(f"Vector database not found at: {DB_FAISS_PATH}")
-            st.info("You need to create the vector database first by ingesting documents.")
             return None
         
         embedding_model, _ = load_models()
