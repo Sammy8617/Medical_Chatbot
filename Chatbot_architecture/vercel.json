@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "frontend.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend.py"
+    }
+  ],
+  "env": {
+    "DEPLOYMENT_MODE": "hybrid"
+  }
+}

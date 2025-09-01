@@ -65,18 +65,9 @@ if 'current_response' not in st.session_state:
     st.session_state.current_response = None
 
 # Configuration
-HF_TOKEN = os.environ.get("HF_TOKEN")  # For hosted models
-DEPLOYMENT_MODE = os.environ.get("DEPLOYMENT_MODE", "local")  # local, hosted, or hybrid
-HUGGINGFACE_REPO_ID = "Free Models (Auto-selected)"  # Updated to show auto-selection
+HF_TOKEN = os.environ.get("HF_TOKEN")
+HUGGINGFACE_REPO_ID = "meta-llama/Meta-Llama-3-8B"
 DB_FAISS_PATH = "vectorstore/db_faiss"
-
-# Deployment configuration
-if DEPLOYMENT_MODE == "hosted":
-    st.info("🚀 **Deployment Mode: Hosted** - Using free Hugging Face models")
-elif DEPLOYMENT_MODE == "local":
-    st.info("💻 **Deployment Mode: Local** - Using local models")
-else:
-    st.info("🔄 **Deployment Mode: Hybrid** - Auto-selecting best available model")
 
 @st.cache_resource
 def load_models():
@@ -88,56 +79,14 @@ def load_models():
             encode_kwargs={'normalize_embeddings': True}
         )
         
-        # Use free, hosted models for deployment
-        from langchain_huggingface import HuggingFaceEndpoint
-        
-        # Free models that don't require credits
-        free_models = [
-            "microsoft/DialoGPT-medium",
-            "gpt2",
-            "distilgpt2",
-            "EleutherAI/gpt-neo-125M"
-        ]
-        
-        # Try to use a free model
-        for model_name in free_models:
-            try:
-                llm = HuggingFaceEndpoint(
-                    repo_id=model_name,
-                    huggingfacehub_api_token=HF_TOKEN,
-                    temperature=0.1,
-                    max_new_tokens=512
-                )
-                # Test if it works
-                test_response = llm.invoke("test")
-                if test_response:
-                    st.success(f"✅ Using free model: {model_name}")
-                    return embedding_model, llm
-            except Exception as e:
-                continue
-        
-        # Fallback to local model if all free models fail
-        st.warning("⚠️ Free models unavailable, falling back to local model")
-        from langchain_huggingface import HuggingFacePipeline
-        from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-        
-        model_name = "microsoft/DialoGPT-medium"
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-        
-        pipe = pipeline(
-            "text-generation",
-            model=model,
-            tokenizer=tokenizer,
-            max_new_tokens=512,
+        llm = HuggingFaceEndpoint(
+            repo_id=HUGGINGFACE_REPO_ID,
+            huggingfacehub_api_token=HF_TOKEN,
             temperature=0.1,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id
+            max_new_tokens=512
         )
         
-        llm = HuggingFacePipeline(pipeline=pipe)
         return embedding_model, llm
-        
     except Exception as e:
         st.error(f"Error loading models: {str(e)}")
         return None, None
@@ -170,11 +119,21 @@ def create_qa_chain():
         if embedding_model is None or llm is None or db is None:
             return None
         
-        custom_prompt_template = """Based on the following medical context, answer the user's question:
+        custom_prompt_template = """SYSTEM: You are a medical AI assistant that can ONLY answer questions based on the provided context. You have NO access to external knowledge, general information, or pre-trained knowledge about any topics.
 
-{context}
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+1. ONLY use information from the context below
+2. If the context is empty or doesn't contain relevant information, respond with: "I cannot answer this question based on the provided medical context."
+3. If the question is not medical-related, respond with: "This question is not related to medical topics covered in my documents."
+4. DO NOT use ANY knowledge about sports, celebrities, history, or any other topics
+5. DO NOT make assumptions or provide information not explicitly in the context
+6. If you don't know the answer from the context, say "I cannot answer this question based on the provided medical context."
+
+Context: {context}
 
 Question: {question}
+
+Remember: You can ONLY use the context above. Any other information is forbidden.
 
 Answer:"""
 
@@ -216,46 +175,6 @@ def validate_context(query, retrieved_docs):
     
     return True, relevant_docs
 
-def clean_prompt_artifacts(response_text):
-    """Remove prompt artifacts and instruction text from LLM responses"""
-    if not response_text:
-        return response_text
-    
-    # Remove common prompt artifacts
-    artifacts_to_remove = [
-        "You are a medical AI assistant.",
-        "Answer the question based ONLY on the provided context.",
-        "SYSTEM:",
-        "CRITICAL INSTRUCTIONS - READ CAREFULLY:",
-        "ONLY use information from the context below",
-        "If the context is empty or doesn't contain relevant information, respond with:",
-        "If the question is not medical-related, respond with:",
-        "DO NOT use ANY knowledge about sports, celebrities, history, or any other topics",
-        "DO NOT make assumptions or provide information not explicitly in the context",
-        "If you don't know the answer from the context, say",
-        "Remember: You can ONLY use the context above. Any other information is forbidden.",
-        "Context:",
-        "Question:",
-        "Answer:"
-    ]
-    
-    cleaned_text = response_text
-    for artifact in artifacts_to_remove:
-        cleaned_text = cleaned_text.replace(artifact, "").strip()
-    
-    # Remove leading/trailing whitespace and normalize
-    cleaned_text = cleaned_text.strip()
-    
-    # If the response contains the question repeated, clean it
-    if "what is cardiac disease prevention" in cleaned_text.lower():
-        cleaned_text = cleaned_text.replace("what is cardiac disease prevention", "").strip()
-    
-    # If the response is too short or just prompt artifacts, provide a fallback
-    if len(cleaned_text) < 100 or cleaned_text.count(".") < 2:
-        return "Based on the available medical context, I can see information about restrictive cardiomyopathy and some cardiac conditions, but the specific details about comprehensive cardiac disease prevention strategies are not fully covered in my current documents. For complete prevention guidelines, please consult with a healthcare provider."
-    
-    return cleaned_text
-
 def get_response(query):
     """Get response from the QA chain"""
     try:
@@ -278,10 +197,6 @@ def get_response(query):
         
         # Get response from QA chain
         response = qa_chain.invoke({'query': query})
-        
-        # Clean prompt artifacts
-        if response and 'result' in response:
-            response['result'] = clean_prompt_artifacts(response['result'])
         
         return response, validated_docs
     except Exception as e:
