@@ -96,7 +96,7 @@ def load_vector_database():
     """Load the FAISS vector database"""
     try:
         if not os.path.exists(DB_FAISS_PATH):
-            st.error(f"Vector database not found at: {DB_FAISS_PATH}")
+            st.error(f"Vector database {DB_FAISS_PATH} cannot be uploaded due to the large size")
             return None
         
         embedding_model, _ = load_models()
