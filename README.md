@@ -192,5 +192,8 @@ The system architecture consists of the following key components:
 - **Token management**: Keep HuggingFace API tokens secure and update `.env` as needed.
 
 ***
-
+<img width="1920" height="1080" alt="Screenshot 2025-09-01 215357" src="https://github.com/user-attachments/assets/32eeb14d-c2c5-4241-b7bb-4d3696224dbc" />
+<img width="1920" height="1080" alt="Screenshot 2025-09-01 215317" src="https://github.com/user-attachments/assets/b3f8ebdc-95ff-4751-9a2f-925f34087aa7" />
+<img width="1920" height="1080" alt="Screenshot 2025-09-01 222228" src="https://github.com/user-attachments/assets/6de1948c-2928-4a6e-8996-d0e00a4384a8" />
+<img width="1920" height="1080" alt="Screenshot 2025-09-01 231705" src="https://github.com/user-attachments/assets/90a20992-8183-4c55-b688-423e2b2f34d2" />
 
